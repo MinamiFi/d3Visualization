@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="./js/d3.v7.js"></script>
+</head>
+
+<body>
+  <svg style="width: 1200; height:800; background:lightgray">
+  </svg>
+
+  <script>
+    d3.json('./data/data.json').then(dataset => {
+      let width = 1200
+      let height = 800
+      let margin = 50
+      let svg = d3.select('svg')
+      let colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
+      let xMin = d3.min(dataset, d => d[0])
+      let xMax = d3.max(dataset, d => d[0])
+      let xScale = d3.scaleLinear()
+        .domain([xMin, xMax])
+        .range([margin, width - margin])
+      svg.append('g')
+        .attr('transform', 'translate(0, ' + (height - margin) + ')')
+        .call(d3.axisBottom(xScale))
+      let yMin = d3.min(dataset, d => d[1])
+      let yMax = d3.max(dataset, d => d[1])
+      let yScale = d3.scaleLinear()
+        .domain([yMax, yMin])
+        .range([margin, height - margin])
+      svg.append('g')
+        .attr('transform', 'translate(' + margin + ',0)')
+        .call(d3.axisLeft(yScale))
+      svg.selectAll('circle')
+        .data(dataset)
+        .enter()
+        .append('circle')
+        .attr('r', 5)
+        .attr('fill', function (d) {
+          return colors[d[2]];
+        })
+        .attr('cx', function (d, i) {
+          return xScale(d[0]);
+        })
+        .attr('cy', function (d) {
+          return yScale(d[1]);
+        })
+    })
+  </script>
+</body>
+
+</html>

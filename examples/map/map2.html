@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src='https://cdn.jsdelivr.net/npm/d3@7'></script>
+    <script src="http://d3js.org/topojson.v1.min.js"></script>
+</head>
+<style>
+    #map-container {
+        /* background-color: #000; */
+        height: 100vh;
+        margin-top: 1px;
+    }
+</style>
+
+<body>
+    <div id="map-container">
+
+    </div>
+</body>
+<script>
+    const width = 1200;
+    const height = 800;
+    let svg = d3.select("#map-container")
+        .append('svg')
+        .attr("width", width)
+        .attr("height", height)
+        
+    var projection = d3.geoMercator()
+        .center([107, 31])
+        .scale(600)
+        .translate([width / 2, height / 2]);
+        
+    var path = d3.geoPath()
+        .projection(projection);
+
+    var peking = [116.3, 39.9];
+    var proPeking = projection(peking);
+    svg.append("circle")
+        .attr("class", "point")
+        .attr("cx", proPeking[0])
+        .attr("cy", proPeking[1])
+        .attr("r", 8);
+</script>
+
+</html>

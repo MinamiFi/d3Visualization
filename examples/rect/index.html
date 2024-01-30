@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./js/d3.v7.js"></script>
+
+</head>
+
+<body>
+</body>
+
+<script>
+    d3.json("./data/bar.json")
+        .then(function (data) {
+            console.log(data);
+
+            //统计数据
+            //长度
+            let data_length = data.length;
+            //制作一个名称数组和频率数组
+            let letter = []
+            let data_fre = []
+            for (let i = 0; i < data_length; i++) {
+                if (!letter.hasOwnProperty(data[i].letter))
+                    letter.push(data[i].letter);
+                data_fre.push(data[i].frequency)
+            }
+            console.log(data_fre)
+            console.log(letter)
+            //最大最小值
+            let xMin = d3.min(data_fre)
+            let xMax = d3.max(data_fre)
+            console.log(xMin, xMax);
+
+            //先画一个svg画布
+            const width = 1500,
+                height = 800;
+            //表格大小
+            let margin = { top: 30, right: 30, bottom: 70, left: 60 },
+                graph_width = width - margin.left - margin.right,
+                graph_height = height - margin.top - margin.bottom;
+            let svg = d3.select('body')
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height)
+                .style('background-color', '#fff')
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+            // X axis
+            const xScale = d3.scaleBand()
+                .domain(letter)//Object.keys()方法将对象的所有键提取出来
+                .range([0, graph_width])
+                .padding(0.1);
+            const xAxis = d3.axisBottom(xScale);
+
+            svg.append("g")
+                .attr("transform", 'translate(0, ' + graph_height + ')')//移到底部
+                .call(xAxis);//把x比例尺应用于该元素
+
+
+            // Add Y axis
+            var y = d3.scaleLinear()
+                .domain([0, xMax])
+                .range([graph_height, 0]);
+            svg.append("g")
+                .call(d3.axisLeft(y));
+
+            // Bars
+            svg.selectAll(".bar")
+                .data(data)
+                .enter()
+                .append("rect")
+                .attr("class", "bar")
+                .attr("x", function (d) { return xScale(d.letter); })
+                .attr("width", xScale.bandwidth()) // 每一格的长度
+                .attr("y", function (d) { return y(d.frequency); }) // 男生人数对应的y坐标
+                .attr("height", function (d) { return graph_height - y(d.frequency); }) // 男生人数对应的高度
+                .attr("fill", "#69b3a2") // 浅绿色
+                .style("opacity", 0.7)
+                .on('mouseover', function (d) {
+                    d3.select(this)
+                        .style('opacity', 1);
+                    console.log('mouseOver')
+                })
+                .on('mouseout', function (d) {
+                    d3.select(this)
+                        .style('opacity', 0.7);
+                    console.log('mouseOut')
+                })
+
+                .each(function (d) {
+                    // 在男生矩形上方添加文本元素
+                    svg.append("text")
+                        .attr("class", "label")
+                        .attr("x", xScale(d.letter) + xScale.bandwidth() / 2)
+                        .attr("y", y(d.frequency) - 10)
+                        .attr("text-anchor", "middle") // 居中对齐
+                        .attr("dominant-baseline", "middle") // 居中对齐
+                        .text(d.frequency);
+                });
+
+        })
+</script>
+
+
+<style>
+    #container {
+        width: 1200px;
+        height: 800px;
+    }
+</style>
+
+
+</html>

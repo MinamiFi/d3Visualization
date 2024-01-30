@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="./js/d3.v7.js"></script>
+</head>
+
+<body>
+  <script>
+    // 读数据
+    d3.json('./data/calendar+pie.json').then(data => {
+      // config
+      const width = 1250
+      const height = 950
+      const margin = 100
+      const colors =
+        [
+          '#fac858',
+          '#3ba272',
+          '#fc8452',
+        ]
+      const colorMap = {
+        'Eat': colors[0],
+        'Sleep': colors[1],
+        'Play': colors[2]
+      }
+      const days = d3.map(data, d => d.day).splice(4, 7)
+      const weeks = ['1', '2', '3', '4', '5']
+
+      // svg
+      const svg = d3.select('body')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+
+      // 比例尺和轴
+      const xScale = d3.scaleBand()
+        .domain(days)
+        .range([margin, width - margin])
+
+      const yScale = d3.scaleBand()
+        .domain(weeks)
+        .range([margin, height - margin])
+
+      svg.append('g')
+        .call(d3.axisTop(xScale))
+        .attr('transform', `translate(${0},${margin})`)
+        .selectAll('.domain').remove()
+
+      svg.append('g')
+        .call(d3.axisRight(yScale))
+        .attr('transform', `translate(${width - margin},${0})`)
+        .selectAll('.domain').remove()
+
+      // 矩形边框
+      const rectWidth = (width - 2 * margin) / days.length
+      const rectHeight = (height - 2 * margin) / weeks.length
+      for (let i = 0; i < days.length; i++) {
+        for (let j = 0; j < weeks.length; j++) {
+          let xPosition = xScale(days[i])
+          let yPosition = yScale(weeks[j])
+          svg.append('rect')
+            .attr('x', xPosition)
+            .attr('y', yPosition)
+            .attr('width', rectWidth)
+            .attr('height', rectHeight)
+            .attr('fill', 'none')
+            .attr('stroke', 'darkgray')
+        }
+      }
+
+      // 外圈范围定义
+      const valueExent = d3.extent(data, d => d.Eat + d.Sleep + d.Play)
+      const sizeScale = d3.scaleLinear()
+        .domain(valueExent)
+        .range([35, 72])
+
+      const innerRadius = 8
+
+      // 饼图
+      for (let i = 0; i < data.length; i++) {
+        let d = data[i]
+        let day = d.day
+        let week = d.week
+        let g = svg.append('g')
+          .attr('transform', d => `translate(
+          ${xScale(day) + rectWidth / 2}, 
+          ${yScale(week) + rectHeight / 2})`)
+
+        // 数据
+        let valueArray = [
+          { 'name': 'Eat', "value": d.Eat },
+          { 'name': 'Sleep', "value": d.Sleep },
+          { 'name': 'Play', "value": d.Play }
+        ]
+
+        let outerRadius = sizeScale(d3.sum(valueArray, d => d.value))
+        // 转换成饼图数据
+        let pieData = d3.pie()
+          .value(d => d.value)
+          .sort((a, b) => a.name - b.name)(valueArray)
+
+        // 弧线生成器
+        let arc = d3.arc()
+          .innerRadius(innerRadius)
+          .outerRadius(outerRadius)
+          .cornerRadius(6)
+          .padAngle(Math.PI / 90)
+
+        // 绘制每个分块
+        g.selectAll('path')
+          .data(pieData)
+          .enter()
+          .append('path')
+          .attr('d', d => arc(d))
+          .attr('fill', d => colorMap[d.data.name])
+          .attr('fill-opacity', 0.9)
+          .on('mouseover', function () {
+            d3.select(this)
+              .append('title')
+              .text(`Eat: ${d.Eat.toFixed(2)}\nSleep: ${d.Sleep.toFixed(2)}\nPlay: ${d.Play.toFixed(2)}`)
+          })
+      }
+
+      // 图例和文字
+      // 文字
+      svg.append('text')
+        .text('day')
+        .attr('font-weight', 'bold')
+        .attr('text-anchor', 'middle')
+        .attr('transform', `translate(${width / 2},${margin / 2})`)
+      svg.append('text')
+        .text('week')
+        .attr('font-weight', 'bold')
+        .attr('text-anchor', 'middle')
+        .attr('transform', `translate(${width - margin / 2},${height / 2}) rotate(90)`)
+
+      // 图例
+      let count = 0
+      for (let key in colorMap) {
+        let g = svg.append('g')
+          .attr('transform', `translate(
+            ${width - margin / 1.5},
+            ${count * 20 + margin / 3})`)
+        g.append('rect')
+          .attr('width', 12)
+          .attr('height', 12)
+          .attr('fill', colorMap[key])
+        g.append('text')
+          .text(key)
+          .attr('dx', 15)
+          .attr('dy', 10)
+          .attr('font-size', 12)
+        count += 1
+      }
+
+    })
+  </script>
+</body>
+
+</html>

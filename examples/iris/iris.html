@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="./js/d3.v7.js"></script>
+</head>
+
+<body>
+  <script>
+    let scatter = () => {
+      d3.json('./data/iris.json').then(data => {
+        const dataset = data['dataset']
+        const target_names = data['target_names']
+        const feature_names = data['feature_names']
+
+        let colors = ["#4e79a7", "#f28e2c", "#e15759", "#76b7b2", "#59a14f", "#edc949", "#af7aa1", "#ff9da7", "#9c755f", "#bab0ab"]
+        let color_map = {}
+        for (let i = 0; i < target_names.length; i++) {
+          color_map[target_names[i]] = colors[i]
+        }
+
+        const width = 870;
+        const height = 800;
+        const margin = 25;
+        const inner_margin = 25;
+
+        const svg = d3.select('body')
+          .append('svg')
+          .attr('width', width)
+          .attr('height', height)
+
+        const total_x_scale = d3.scaleBand().domain(feature_names.slice(1, 4)).range([margin, height - margin])
+        const total_y_scale = d3.scaleBand().domain(feature_names.slice(0, 3)).range([margin, height - margin])
+
+        svg.append('g')
+          .call(d3.axisTop(total_x_scale))
+          .attr('transform', `translate(${0}, ${margin})`)
+          .selectAll('.domain').remove()
+
+        svg.append('g')
+          .call(d3.axisRight(total_y_scale))
+          .attr('transform', `translate(${height - margin}, ${0})`)
+          .selectAll('.domain').remove()
+
+
+        for (let i = 0; i < feature_names.length; i++) {
+          for (let j = i + 1; j < feature_names.length; j++) {
+            let x_name = feature_names[j];
+            let y_name = feature_names[i];
+
+            let x_position = total_x_scale(x_name)
+            let y_position = total_y_scale(y_name)
+            let g = svg.append('g')
+              .attr('transform', `translate(${x_position}, ${y_position})`)
+
+            let inner_width = (height - 2 * margin) / (feature_names.length - 1)
+            let inner_height = inner_width
+
+            let x_scale = d3.scaleLinear().domain(d3.extent(dataset, d => d[x_name])).range([inner_width - inner_margin, inner_margin])
+            let y_scale = d3.scaleLinear().domain(d3.extent(dataset, d => d[y_name])).range([inner_margin, inner_height - inner_margin])
+
+            g.append('g')
+              .call(d3.axisTop(x_scale))
+              .attr('transform', `translate(${0}, ${inner_margin})`)
+              .selectAll("text")
+              .style("text-anchor", "middle")
+              .attr("dx", "1em")
+              // .attr("dy", "2em")
+              .attr("transform", "rotate(-20)")
+
+            g.append('g')
+              .call(d3.axisRight(y_scale))
+              .attr('transform', `translate(${inner_height - inner_margin}, ${0})`)
+
+            g.selectAll('circle')
+              .data(dataset)
+              .enter()
+              .append('circle')
+              .attr('fill', d => color_map[d.category])
+              .attr('stroke', 'white')
+              .attr('r', 4)
+              .attr('cx', d => x_scale(d[x_name]))
+              .attr('cy', d => y_scale(d[y_name]))
+
+          }
+        }
+
+      })
+    }
+
+    let coordinates = () => {
+      d3.json('./data/iris.json').then(data => {
+        const dataset = data['dataset']
+        const target_names = data['target_names']
+        const feature_names = data['feature_names']
+
+        let colors = ["#4e79a7", "#f28e2c", "#e15759", "#76b7b2", "#59a14f", "#edc949", "#af7aa1", "#ff9da7", "#9c755f", "#bab0ab"]
+        let color_map = {}
+        for (let i = 0; i < target_names.length; i++) {
+          color_map[target_names[i]] = colors[i]
+        }
+
+        const width = 800;
+        const height = 800;
+        const main_height = 500
+        const margin = 50;
+
+        const svg = d3.select('body')
+          .append('svg')
+          .attr('width', width)
+          .attr('height', height)
+
+        const x_scale = d3.scaleBand().domain(feature_names).range([margin, height - margin])
+        // const y_scale = d3.scaleBand().domain(feature_names).range([margin, height - margin])
+
+        const y_scale = {}
+        feature_names.forEach(e => {
+          let scale = d3.scaleLinear().domain(d3.extent(dataset, d => d[e])).range([main_height - margin, margin])
+          // svg.append('g')
+          //   .call(d3.axisRight(scale))
+          //   .attr('transform', `translate(${x_scale(e)}, ${0})`)
+          y_scale[e] = scale
+        });
+
+        svg.append('g')
+          .call(d3.axisTop(x_scale))
+          .attr('transform', `translate(${0}, ${margin})`)
+          .selectAll('.domain').remove()
+
+        let line = d3.line()
+          .x(d => d[0])
+          .y(d => d[1])
+          // .curve(d3.curveMonotoneX)
+
+        svg.selectAll()
+          .data(dataset)
+          .enter()
+          .append('path')
+          .attr('d', d => {
+            let positions = []
+            feature_names.forEach(e => {
+              positions.push([x_scale(e) + (width - (2 * margin)) / 8, y_scale[e](d[e])])
+            })
+            return line(positions)
+
+          })
+          .attr('fill', 'none')
+          .attr('stroke', d => color_map[d.category])
+          .attr('stroke-width', 1.2)
+          .attr('stroke-opacity', 0.8)
+
+        feature_names.forEach(e => {
+          let scale = y_scale[e]
+          svg.append('g')
+            .call(d3.axisRight(scale))
+            .attr('transform', `translate(${x_scale(e) + (width - (2 * margin)) / 8}, ${0})`)
+          y_scale[e] = scale
+        });
+
+      })
+    }
+
+    scatter()
+    coordinates()
+
+
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./js/d3.layout.cloud.js"></script>
+    <script src="./js/d3.v7.js"></script>
+</head>
+
+<body>
+</body>
+
+<script>
+    const width = 1200;
+    const height = 800;
+    const margin = 50;
+
+    d3.json("./data/word_size.json").then(function (d) {
+        var layout = d3.layout.cloud()
+            .size([width - 2 * margin, height - 2 * margin])
+            .words(d)
+            .padding(5)
+            .rotate(function () { return ~~(Math.random() * 20) * 9; })
+            .font("Impact")
+            .fontSize(function (d) { return d.size; })
+            .on("end", function (words) {
+                d3.select("body").append("svg")
+                    .attr("width", width - 2 * margin)
+                    .attr("height", height - 2 * margin)
+                    .style("background-color", "beige")
+                    .style("position", "relative")
+                    .style("left", "50%")
+                    .style("margin-left", -(width - 2 * margin) / 2)
+                    .append("g")
+                    .attr("transform", "translate(" + (width / 2 - margin) + "," + (height / 2 - margin) + ")")
+                    .selectAll("text")
+                    .data(words)
+                    .enter().append("text")
+                    .style("font-size", function (d) { return d.size + "px"; })
+                    .style("font-family", "Impact")
+                    .attr("text-anchor", "middle")
+                    .attr("transform", function (d) {
+                        return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                    })
+                    .text(function (d) { return d.text; });
+            });
+
+        layout.start();
+
+    })
+</script>
+
+
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="./js/d3.v5.js"></script>
+</head>
+
+<body>
+
+    <script>
+        d3.json("./data/FakeData.json")
+            .then(function (fake_data) {
+                console.log(fake_data);
+
+                //统计数据
+                let sex_data = {};//存储各学院的男女人数
+                let data_length = fake_data.length;
+                for (let i = 0; i < data_length; i++) {
+                    let stu_obj = fake_data[i];
+                    let stu_sex = stu_obj.性别;
+                    let stu_academy = stu_obj.学院;
+
+                    //判断sex_data中是否已经有该学院，如果没有则创造一个
+                    if (!sex_data.hasOwnProperty(stu_academy)) {
+                        sex_data[stu_academy] = [0, 0];
+                    }
+                    //判断男女
+                    if (stu_sex === '男') {
+                        sex_data[stu_academy][0] += 1;
+                    }
+                    else {
+                        sex_data[stu_academy][1] += 1;
+                    }
+                }
+                console.log(sex_data);
+
+                //获得数据的最大最小值
+                //Object.values()方法将对象的所有值提取出来
+                //flat()方法把嵌套数组转化为一维数组
+                const values = Object.values(sex_data).flat();
+                //extent获得最大最小值
+                const [xMin, xMax] = d3.extent(values);
+                console.log(xMin, xMax);
+
+                //先画一个svg画布
+                const width = 1500,
+                    height = 800;
+
+                //表格大小
+                let margin = { top: 30, right: 30, bottom: 70, left: 60 },
+                    graph_width = width - margin.left - margin.right,
+                    graph_height = height - margin.top - margin.bottom;
+
+                // 定义男生和女生的颜色数组
+                const maleColors = ['#69b3a2', '#6a7a8c', '#d1cfcf', '#f3b5c0', '#e47e5d'];
+                const femaleColors = ['#000000', '#0f4c81', '#6b99c2', '#a9cce3', '#d1e5f0'];
+
+                let svg = d3.select('body')
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height)
+                    .style('background-color', '#d9baba')
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                // X axis
+                const xScale = d3.scaleBand()
+                    .domain(Object.keys(sex_data))//Object.keys()方法将对象的所有键提取出来
+                    .range([0, graph_width])
+                    .padding(0.1);
+                const xAxis = d3.axisBottom(xScale);
+                svg.append("g")
+                    .attr("transform", 'translate(0, ' + graph_height + ')')//移到底部
+                    .call(xAxis);//把x比例尺应用于该元素
+
+                // Add Y axis
+                var y = d3.scaleLinear()
+                    .domain([0, xMax])
+                    .range([graph_height, 0]);
+                svg.append("g")
+                    .call(d3.axisLeft(y));
+
+                // Bars
+                const data = d3.entries(sex_data);
+                svg.selectAll(".bar.male")
+                    .data(data)
+                    .enter()
+                    .append("rect")
+                    .attr("class", "bar")
+                    .attr("class", "male")
+                    .attr("x", function (d) { return xScale(d.key); })
+                    .attr("width", xScale.bandwidth() / 2) // 每个学院的宽度分成两份
+                    .attr("y", function (d) { return y(d.value[0]); }) // 男生人数对应的y坐标
+                    .attr("height", function (d) { return graph_height - y(d.value[0]); }) // 男生人数对应的高度
+                    .attr("fill", "#69b3a2") // 浅绿色
+                    .each(function (d) {
+                        // 在男生矩形上方添加文本元素
+                        svg.append("text")
+                            .attr("class", "label")
+                            .attr("x", xScale(d.key) + xScale.bandwidth() / 4)
+                            .attr("y", y(d.value[0]) - 10)
+                            .attr("text-anchor", "middle") // 居中对齐
+                            .attr("dominant-baseline", "middle") // 居中对齐
+                            .text(d.value[0]);
+                    });
+
+                svg.selectAll(".bar.female")
+                    .data(data)
+                    .enter()
+                    .append("rect")
+                    .attr("class", "bar")
+                    .attr("class", "female")
+                    .attr("x", function (d) { return xScale(d.key) + xScale.bandwidth() / 2; }) // 女生矩形的x坐标偏移一半的宽度
+                    .attr("width", xScale.bandwidth() / 2)
+                    .attr("y", function (d) { return y(d.value[1]); }) // 女生人数对应的y坐标
+                    .attr("height", function (d) { return graph_height - y(d.value[1]); }) // 女生人数对应的高度
+                    .attr("fill", "#ff8c00") // 橙色
+                    .each(function (d) {
+                        // 在女生矩形上方添加文本元素
+                        svg.append("text")
+                            .attr("class", "label")
+                            .attr("x", xScale(d.key) + xScale.bandwidth() * 3 / 4)
+                            .attr("y", y(d.value[1]) - 10)
+                            .attr("text-anchor", "middle") // 居中对齐
+                            .attr("dominant-baseline", "middle") // 居中对齐
+                            .text(d.value[1]);
+                    });
+                // 添加按钮元素
+                const button = svg.append("rect")
+                    .attr("x", width / 2 - 50)
+                    .attr("y", graph_height + 20)
+                    .attr("width", 100)
+                    .attr("height", 50)
+                    .attr("fill", "gray")
+                    .attr("rx", 5)
+                    .attr("ry", 5)
+                    .attr("cursor", "pointer")
+                    .on("click", function () {
+                        // 遍历所有柱体元素
+                        let malecolor = Math.floor(Math.random() * maleColors.length);
+                        let femalecolor = Math.floor(Math.random() * maleColors.length);
+                        svg.selectAll(".male").each(function (d) {
+                            // 根据类名选择需要更新颜色的柱体元素
+                            d3.select(this).attr("fill", maleColors[malecolor]);
+                        });
+                        svg.selectAll(".female").each(function (d) {
+                            // 根据类名选择需要更新颜色的柱体元素
+                            d3.select(this).attr("fill", femaleColors[femalecolor]);
+                        });
+
+                    });
+
+                // 在按钮上添加文本元素
+                svg.append("text")
+                    .attr("x", width / 2 - 40)
+                    .attr("y", graph_height + 52)
+                    .attr("fill", "white")
+                    .text("改变颜色")
+                    .attr("cursor", "pointer")
+
+            })
+    </script>
+
+</body>
+
+</html>

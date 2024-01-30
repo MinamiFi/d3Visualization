@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>D3.js Treemap Example</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        rect {
+            stroke: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        var data = {
+            "name": "Root",
+            "children": [
+                {
+                    "name": "Category 1",
+                    "children": [
+                        { "name": "Item 1", "value": 10 },
+                        { "name": "Item 2", "value": 20 },
+                        { "name": "Item 3", "value": 15 }
+                    ]
+                },
+                {
+                    "name": "Category 2",
+                    "children": [
+                        { "name": "Item 4", "value": 12 },
+                        { "name": "Item 5", "value": 25 },
+                        { "name": "Item 6", "value": 18 }
+                    ]
+                }
+            ]
+        };
+
+        // 创建 SVG 容器
+        var svg = d3.select("body")
+            .append("svg")
+            .attr("width", 500)
+            .attr("height", 500);
+
+        // 创建 treemap 布局
+        var treemap = d3.treemap()
+            .size([500, 500])
+            .padding(1);
+
+        // 转换数据
+        var root = d3.hierarchy(data)
+            .sum(function (d) { return d.value; })
+            .sort(function (a, b) { return b.value - a.value; });
+
+        treemap(root);
+
+        // 绘制 treemap
+        var cells = svg.selectAll("g")
+            .data(root.leaves())
+            .enter()
+            .append("g")
+            .attr("transform", function (d) { return "translate(" + d.x0 + "," + d.y0 + ")"; });
+
+        cells.append("rect")
+            .attr("width", function (d) { return d.x1 - d.x0; })
+            .attr("height", function (d) { return d.y1 - d.y0; })
+            .attr("fill", "steelblue");
+
+        cells.append("text")
+            .attr("x", 5)
+            .attr("y", 15)
+            .text(function (d) { return d.data.name; })
+            .attr("fill", "white");
+
+    </script>
+</body>
+
+</html>

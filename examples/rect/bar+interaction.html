@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="./js/d3.v7.js"></script>
+</head>
+
+<body>
+  <select id="selectData" onchange="selectData()">
+    <option value="1">data1</option>
+    <option value="2">data2</option>
+  </select>
+  <input type="button" value="sort" onclick="sortData()">
+  <svg style="width: 1200; height:800; background:lightgray">
+  </svg>
+  <script>
+    let selectData = () => {
+      let select = document.getElementById("selectData")
+      let index = select.selectedIndex
+      let value = select.options[index].value
+      drawBar(value, false)
+    }
+    let sortData = () => {
+      let select = document.getElementById("selectData")
+      let index = select.selectedIndex
+      let value = select.options[index].value
+      drawBar(value, true)
+    }
+    let drawBar = (index, sort) => {
+      let filePath = './data/bar' + index + '.json'
+      d3.json(filePath).then(dataset => {
+
+        if (sort) {
+          dataset = d3.sort(dataset, (b, a) => a.frequency - b.frequency)
+        }
+
+        let width = 1200
+        let height = 800
+        let margin = 50
+        let rectWidth = (width - 2 * margin) / dataset.length
+
+        let svg = d3.select('svg')
+
+        let yScale = d3.scaleLinear()
+          .domain([d3.max(dataset, d => d.frequency),
+            0])
+          .range([margin, height - margin])
+
+        let xScale = d3.scaleBand()
+          .domain(d3.map(dataset, d => d.letter))
+          .range([margin, width - margin])
+
+        svg.selectAll('g').remove()
+        svg.append('g')
+          .attr('transform', 'translate(0, ' + (height - margin) + ')')
+          .call(d3.axisBottom(xScale))
+        svg.append('g')
+          .attr('transform', 'translate(' + margin + ',0)')
+          .call(d3.axisLeft(yScale))
+        // rect
+
+        let selection = svg.selectAll('rect')
+          .data(dataset)
+        let enter = selection.enter()
+        let exit = selection.exit()
+
+        selection
+          .transition()
+          .duration(1000)
+          .attr('x', d => xScale(d.letter))
+          .attr('y', d => yScale(d.frequency))
+          .attr('width', rectWidth)
+          .attr('height', d => height - margin - yScale(d.frequency))
+          .attr('fill', 'steelblue')
+          .attr('stroke', 'white')
+          .attr('rx', 4)
+        enter
+          .append('rect')
+          .transition()
+          .duration(1000)
+          .attr('x', d => xScale(d.letter))
+          .attr('y', d => yScale(d.frequency))
+          .attr('width', rectWidth)
+          .attr('height', d => height - margin - yScale(d.frequency))
+          .attr('fill', 'steelblue')
+          .attr('stroke', 'white')
+          .attr('rx', 4)
+        exit.remove()
+
+        // svg.selectAll('rect')
+        //   .data(dataset)
+        //   .enter()
+        //   .append('rect')
+        //   .attr('x', d => xScale(d.letter))
+        //   .attr('y', d => yScale(d.frequency))
+        //   .attr('width', rectWidth)
+        //   .attr('height', d => height - margin - yScale(d.frequency))
+        //   .attr('fill', 'steelblue')
+        //   .attr('stroke', 'white')
+        //   .attr('rx', 4)
+
+        svg.selectAll('rect')
+          .on('mousemove', function () {
+            d3.select(this)
+              .transition()
+              .duration(500)
+              .attr('fill', 'darkorange')
+          })
+          .on('mouseout', function () {
+            d3.select(this)
+              .transition()
+              .duration(500)
+              .attr('fill', 'steelblue')
+          })
+      })
+    }
+
+    drawBar(1)
+
+  </script>
+
+</body>
+
+</html>

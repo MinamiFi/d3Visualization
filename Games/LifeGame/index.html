@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NanfeiLifeGame</title>
+    <script src="./js/d3.v7.js"></script>
+    <style>
+        body {
+            height: 100vh;
+            background-color: rgb(87, 87, 102);
+        }
+
+        #header {
+            height: 10%;
+            width: 80%;
+            /* background-color: beige; */
+            margin: auto;
+        }
+
+        #header .title {
+            font-weight: 1200;
+            line-height: 10vh;
+            font-size: 6vh;
+            text-align: center;
+            color: #11f;
+        }
+
+        #body {
+            height: 80%;
+            width: 80%;
+            margin: auto;
+            position: relative;
+            background-color: rgba(245, 245, 220, .9);
+        }
+
+        #svg-container {
+            height: 70vh;
+            width: 100%;
+            /* background-color: rgba(245, 245, 220); */
+        }
+
+        #start-btn {
+            width: 5vw;
+            height: 4vh;
+            background-color: gray;
+            border: 1px solid black;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 3vh;
+            color: #fff;
+            line-height: 4vh;
+            text-align: center;
+            font-size: 2vh;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header">
+        <div class="title">
+            NanFei's LifeGame
+        </div>
+    </div>
+
+    <div id="body">
+        <div id="svg-container">
+        </div>
+        <div id="start-btn">
+            Start
+        </div>
+    </div>
+
+    <div id="footer">
+
+    </div>
+</body>
+
+
+<script>
+    //画布初始化
+    let Init = function () {
+        let width = document.getElementById("svg-container").offsetWidth;
+        let height = document.getElementById("svg-container").offsetHeight;
+
+        let svg = d3.select('#svg-container')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .style('background-color', 'rgba(245, 245, 220)')
+            .style('border-top', '2px solid black')
+            .style('border-bottom', '2px solid black');
+
+        let rect_width = width / 100;
+        let rect_height = height / 100;
+        console.log(rect_height, rect_width)
+
+        //先画网格
+        for (let i = 0; i < 99; i++) {
+            //横线
+            svg.append("line")
+                .attr("x1", 0)
+                .attr("y1", (i + 1) * rect_height)
+                .attr("x2", width)
+                .attr("y2", (i + 1) * rect_height)
+                .attr("stroke", "black")
+                .attr("stroke-width", "2px");
+            //竖线
+            svg.append("line")
+                .attr("x1", (i + 1) * rect_width)
+                .attr("y2", 0)
+                .attr("x2", (i + 1) * rect_width)
+                .attr("y2", height)
+                .attr("stroke", "black")
+                .attr("stroke-width", "2px");
+        }
+    }
+
+    //画细胞的存活情况
+    let Draw = function (cell) {
+        console.log(cell);
+        for (let i = 0; i < 100; i++) {
+            let data = cell[i];
+        }
+
+    }
+
+    //画布初始化 画出方格
+    Init();
+    //1. 构建数组
+    let cell0 = [];//变化前的cell
+    let cell1 = [];//变化后端cell
+    let row = [];//每一排
+
+    //初始化数组
+    for (let i = 0; i < 100; i++) {
+        row = [];//清空
+        //生成随机数
+        for (let j = 0; j < 100; j++) {
+            row.push(Math.round(Math.random()));
+        }
+        cell0.push(row);
+        cell1.push(row);
+    }
+    console.log(cell0);
+    console.log(cell1);
+
+    //2. 根据数组画出细胞存活情况
+    Draw(cell1);
+
+    //3. 随时间变换数组
+    for (let i = 0; i < 100; i++) {
+        for (let j = 0; j < 100; j++) {
+
+        }
+    }
+    //4. 改变已经画的细胞存活情况
+
+
+
+</script>
+
+</html>

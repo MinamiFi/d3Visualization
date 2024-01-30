@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="./js/d3.v7.js"></script>
+</head>
+
+<body>
+  <script>
+    d3.json('./data/geo/USA.geojson').then(geojson => {
+    // d3.json('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json').then(geojson => {
+      // d3.json('./data/geo/network.json').then(data => {
+      // const nodes = data.nodes
+      // const edges = data.edges
+
+      const svgWidth = 1400;
+      const svgHeight = 800;
+      const padding = 0;
+
+      const svg = d3.select("body")
+        .append('svg')
+        .attr("height", svgHeight)
+        .attr("width", svgWidth)
+        .style("border", "1px black solid")
+        .attr('viewBox', [600, 400, svgWidth - 600, svgHeight - 400]);
+
+      const x0 = padding;
+      const y0 = padding;
+      const x1 = svgWidth - padding * 2;
+      const y1 = svgHeight - padding * 2;
+      const projection = d3.geoMercator().fitExtent(
+        [
+          [x0, y0],
+          [x1, y1],
+        ], geojson);
+
+      const pathGenerator = d3.geoPath()
+        .projection(projection);
+
+      const mapPath = svg.selectAll()
+        .data(geojson.features) //数据绑定
+        .join("path")
+        .attr("d", pathGenerator) //绘制path
+        .attr("stroke-width", 0.5)
+        .attr("stroke", "#000000")
+        .attr("fill", "black")
+        .on('mouseover', function () {
+          d3.selectAll('path').attr("fill", "black")
+          d3.select(this).attr("fill", "#aaa")
+        })
+        .on('mouseout', function () {
+          d3.selectAll('path').attr("fill", "black")
+        });
+
+    })
+
+    // })
+  </script>
+</body>
+
+</html>

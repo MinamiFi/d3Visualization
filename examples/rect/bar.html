@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="./js/d3.v7.js"></script>
+</head>
+
+<body>
+  <svg style="width: 1200; height:800; background:lightgray">
+  </svg>
+
+  <select id="selectBox" onchange="selectData()">
+    <option value="1">table1</option>
+    <option value="2">table2</option>
+  </select>
+  <input type="button" value="排序" id="" onclick="sortData()">
+  <script>
+
+    function drawBar(index, sort) {
+      let filePath = './data/bar' + index + '.json';
+      console.log(filePath);
+      d3.json(filePath).then(dataset => {
+        //是否排序
+        if (sort) {
+          dataset = d3.sort(dataset, (a, b) => {
+            return b.frequency - a.frequency
+          });
+        }
+        //svg和rect基本信息
+        let width = 1200;
+        let height = 800;
+        let margin = 50;
+        let rectWidth = (width - 2 * margin) / dataset.length;
+
+        let svg = d3.select('svg')
+        
+        let selection = svg.selectAll('rect')
+          .data(dataset)
+        let enter = selection.enter();
+        let exit = selection.exit();
+
+        //删去原来的坐标轴
+        d3.selectAll('g').remove();
+
+        //新的坐标轴
+        let yScale = d3.scaleLinear()
+          .domain([d3.max(dataset, d => d.frequency),
+            0])
+          .range([margin, height - margin])
+
+        let xScale = d3.scaleBand()
+          .domain(d3.map(dataset, d => d.letter))
+          .range([margin, width - margin])
+
+        svg.append('g')
+          .transition()
+          .duration(1000)
+          .attr('transform', 'translate(0, ' + (height - margin) + ')')
+          .call(d3.axisBottom(xScale))
+        svg.append('g')
+          .transition()
+          .duration(1000)
+          .attr('transform', 'translate(' + margin + ',0)')
+          .call(d3.axisLeft(yScale))
+
+        //修改已经有的rect的参数
+        selection
+          .transition()
+          .duration(1000)
+          .attr('x', d => xScale(d.letter))
+          .attr('y', d => yScale(d.frequency))
+          .attr('width', rectWidth)
+          .attr('height', d => height - margin - yScale(d.frequency))
+          .attr('fill', 'steelblue')
+          .attr('stroke', 'white')
+          .attr('rx', 4)
+
+        // 增加的rect
+        enter
+          .append('rect')
+          .transition()
+          .duration(1000)
+          .attr('x', d => xScale(d.letter))
+          .attr('y', d => yScale(d.frequency))
+          .attr('width', rectWidth)
+          .attr('height', d => height - margin - yScale(d.frequency))
+          .attr('fill', 'steelblue')
+          .attr('stroke', 'white')
+          .on('mouseover', function (d) {
+            d3.select(this)
+              .transition()
+              .duration(500)
+              .attr('fill', 'white');
+          })
+          .on('mouseout', function (d) {
+            d3.select(this)
+              .transition()
+              .duration(500)
+              .attr('fill', 'steelblue');
+          });
+
+        //多余的rect
+        exit.remove();
+
+
+      })
+    }
+
+    let selectData = () => {
+      let selectBox = document.getElementById('selectBox');
+      let index = selectBox.selectedIndex; // 选中索引
+      let value = selectBox.options[index].value;
+      // console.log(value);
+      drawBar(value, false);
+    }
+
+
+    let sortData = () => {
+
+      let selectBox = document.getElementById('selectBox');
+      let index = selectBox.selectedIndex; // 选中索引
+      let value = selectBox.options[index].value;
+      // console.log(value);
+      drawBar(value, true);
+    }
+
+    drawBar(1, false);
+
+  </script>
+
+
+</body>
+
+</html>

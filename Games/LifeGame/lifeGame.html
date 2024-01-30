@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>NanFeiLifeGame</title>
+    <style>
+        #title {
+            font-size: 30px;
+            font-weight: 1000;
+            text-align: center;
+            line-height: auto;
+        }
+
+        .grid {
+            width: 600px;
+            height: 600px;
+            margin: auto;
+            border: #000 1px solid;
+            overflow: hidden;
+        }
+
+        .cell {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #000;
+        }
+
+        #btn {
+            width: 120px;
+            height: 50px;
+            margin: auto;
+            background-color: #ccc;
+            font-size: 25px;
+            line-height: 50px;
+            text-align: center;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="title">Life Game</div>
+    <div class="grid" id="grid"></div>
+    <div id="btn"></div>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        const rows = 100;
+        const cols = 100;
+        let grid = new Array(rows).fill(null).map(() => new Array(cols).fill(false));
+
+        let svg = d3.select("#grid")
+            .append("svg")
+            .attr("width", cols * 6)
+            .attr("height", rows * 6);
+
+        //更新细胞存活情况
+        function updateGrid() {
+            // console.log("updata worked");
+            const newGrid = grid.map(row => [...row]);
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const neighbors = countAliveNeighbors(i, j);
+                    /*
+                    游戏规则
+                    孤单死亡：如果细胞的邻居小于等于1个，则该细胞在下一次状态将死亡；
+                    拥挤死亡：如果细胞的邻居在4个及以上，则该细胞在下一次状态将死亡；
+                    稳定：如果细胞的邻居为2个或3个，则下一次状态为稳定存活；
+                    复活：如果某位置原无细胞存活，而该位置的邻居为3个，则该位置将复活一个细胞。
+                    */
+                    if (grid[i][j]) {
+                        if (neighbors < 2 || neighbors > 3) {
+                            newGrid[i][j] = false;
+                        }
+                    } else {
+                        if (neighbors === 3) {
+                            newGrid[i][j] = true;
+                        }
+                    }
+                }
+            }
+            grid = newGrid;
+
+            // 更新网格的显示
+            const cells = svg.selectAll(".cell")
+                .data(grid.flat())
+                // .enter()
+                // .append("rect")
+                .attr("class", d => d ? "cell alive" : "cell")
+                .attr("x", (d, i) => (i % cols) * 6)
+                .attr("y", (d, i) => Math.floor(i / cols) * 6)
+                .attr("width", 6)
+                .attr("height", 6)
+                .attr('fill', d => d ? '#000' : "#fff");
+        }
+
+        //看看周围九个细胞的存活
+        function countAliveNeighbors(x, y) {
+            let count = 0;
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    const newX = x + i;
+                    const newY = y + j;
+                    if (i !== 0 || j !== 0) {
+                        if (newX >= 0 && newX < rows && newY >= 0 && newY < cols && grid[newX][newY]) {
+                            count++;
+                        }
+                    }
+                }
+            }
+            return count;
+        }
+
+        // 初始化随机细胞状态
+        for (let i = 0; i < rows; i++) {
+            for (let j = 0; j < cols; j++) {
+                grid[i][j] = Math.random() < 0.08;
+            }
+        }
+
+        // 创建网格的显示
+        const cells = svg.selectAll(".cell")
+            .data(grid.flat())
+            .enter()
+            .append("rect")
+            .attr("class", d => d ? "cell alive" : "cell")
+            .attr("x", (d, i) => (i % cols) * 6)
+            .attr("y", (d, i) => Math.floor(i / cols) * 6)
+            .attr("width", 6)
+            .attr("height", 6)
+            .attr('fill', d => d ? '#000' : "#fff");
+
+        let btn = document.getElementById("btn");
+        let isBegin = false;
+        let timer;//计时器
+
+        btn.innerHTML = "Start";
+        btn.addEventListener("click", function () {
+            if (!isBegin) {// 定时调用updateGrid来模拟演化
+                timer = setInterval(updateGrid, 1000);
+                isBegin = true;
+                btn.innerHTML = "Stop";
+            }
+            else {
+                clearInterval(timer);
+                btn.innerHTML = 'continue';
+                isBegin = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

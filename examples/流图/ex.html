@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>D3.js ThemeRiver Example</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        svg {
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        // 随机生成多维时序数据
+        var numThemes = 5; // 主题数量
+        var numTimePoints = 10; // 时间点数量
+
+        var data = [];
+        for (var i = 0; i < numTimePoints; i++) {
+            var timeData = [];
+            for (var j = 0; j < numThemes; j++) {
+                timeData.push(Math.random());
+            }
+            data.push(timeData);
+        }
+
+        // 设置图表尺寸
+        var margin = { top: 20, right: 30, bottom: 30, left: 30 };
+        var width = 800 - margin.left - margin.right;
+        var height = 400 - margin.top - margin.bottom;
+
+        // 创建 SVG 容器
+        var svg = d3.select("body")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        // 创建主题流图布局
+        var stack = d3.stack()
+            .keys(d3.range(numThemes))
+            .offset(d3.stackOffsetWiggle);
+
+        var layers = stack(data);
+
+        // 设置颜色比例尺
+        var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+        // 创建 x 轴比例尺
+        var x = d3.scaleLinear()
+            .domain([0, numTimePoints - 1])
+            .range([0, width]);
+
+        // 创建 y 轴比例尺
+        var y = d3.scaleLinear()
+            .domain([d3.min(layers, stackMin), d3.max(layers, stackMax)])
+            .range([height, 0]);
+
+        // 创建区域生成器
+        var area = d3.area()
+            .x(function (d, i) { return x(i); })
+            .y0(function (d) { return y(d[0]); })
+            .y1(function (d) { return y(d[1]); })
+            .curve(d3.curveBasis);
+
+        // 绘制主题流图
+        svg.selectAll("path")
+            .data(layers)
+            .enter().append("path")
+            .attr("d", area)
+            .style("fill", function (d, i) { return color(i); });
+
+        // 添加 x 轴
+        svg.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+
+        // 添加 y 轴
+        svg.append("g")
+            .call(d3.axisLeft(y));
+
+        // 定义堆叠图的最小值
+        function stackMin(layer) {
+            return d3.min(layer, function (d) { return d[0]; });
+        }
+
+        // 定义堆叠图的最大值
+        function stackMax(layer) {
+            return d3.max(layer, function (d) { return d[1]; });
+        }
+    </script>
+</body>
+
+</html>
